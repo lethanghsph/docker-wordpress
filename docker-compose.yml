@@ -1,0 +1,74 @@
+version: '2'
+
+services:
+    application:
+        container_name: application
+        image: debian
+        volumes:
+            - ./code:/var/www/wordpress
+    workspace:
+        container_name: workspace
+        restart: always
+        image: lethang/wordpress-workspace:php71
+        volumes_from:
+            - application
+        tty: true
+    php-fpm:
+        container_name: php-fpm
+        restart: always
+        image: lethang/wordpress-php-fpm:php71
+        volumes_from:
+            - application
+        expose:
+            - "9000"
+        links:
+            - workspace
+    nginx:
+        container_name: nginx
+        restart: always
+        image: lethang/wordpress-nginx
+        volumes_from:
+            - data
+            - logs
+            - application
+        ports:
+            - "8000:80"
+        links:
+            - php-fpm
+    data:
+        container_name: data
+        image: debian
+        volumes:
+            - .docker/mysql:/var/lib/mysql
+            - .docker/data:/data
+    logs:
+        container_name: logs
+        image: debian
+        volumes:
+            - .docker/logs/nginx:/var/log/nginx
+    mysql:
+        container_name: mysql
+        restart: always
+        image: mysql
+        volumes_from:
+            - data
+            - logs
+        ports:
+            - "3307:3306"
+        environment:
+            MYSQL_DATABASE: homestead
+            MYSQL_USER: homestead
+            MYSQL_PASSWORD: secret
+            MYSQL_ROOT_PASSWORD: root
+    phpmyadmin:
+        container_name: phpmyadmin
+        depends_on:
+            - mysql
+        image: phpmyadmin/phpmyadmin
+        restart: always
+        ports:
+            - "8080:80"
+        environment:
+            PMA_ARBITRARY: 1
+            PHA_HOST: mysql
+
