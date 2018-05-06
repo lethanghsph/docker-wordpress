@@ -48,8 +48,8 @@ services:
             - .docker/logs/nginx:/var/log/nginx
     mysql:
         container_name: mysql
+        image: mysql:5.7
         restart: always
-        image: mysql
         volumes_from:
             - data
             - logs
